@@ -1,170 +1,231 @@
-# 🧠 Pairwise Preference Learning with a Siamese Transformer  
-### Predicting Financial Position Superiority under Identical Market Conditions
+# Pairwise Preference Learning with Siamese Transformers  
+Behavioural Modelling for Financial Strategy Comparison
 
-This project explores a **pairwise preference learning** formulation for financial time-series data using a **Siamese Transformer architecture**.  
-Rather than predicting labels from isolated samples, the model compares **two candidate positions under the same market snapshot** and learns which candidate performs better.
+This project implements a **Siamese Transformer architecture** to model behavioural differences between two financial time-series strategies under identical market conditions.  
+The goal is to learn which strategy performs better *given the same context and the same market environment*, using representation learning rather than classical performance metrics.
 
-This approach leverages **comparative representation learning**, **Transformer-based sequence modelling**, and **systematic experimentation** to reach **Kaggle Test Accuracy: `0.81`**.
-
----
-
-## ⚡ Key Highlights
-
-- **Siamese Transformer Encoder**  
-  Shared weights ensure both candidates are encoded using the *exact same representational geometry*, enabling fair, consistent comparison.
-
-- **Comparative Representation Learning**  
-  The model learns how each position behaves in the same market environment, relying on the **absolute difference** between embeddings to capture the preference signal.
-
-- **Financial-Time-Series-Aware Input Encoding**  
-  Transformer encoder learns complex interactions between OHLCV features and the position taken in that context.
-
-- **Generalisation-Focused Model Selection**  
-  The best-performing model did not have the lowest loss.  
-  Instead, it produced the **strongest decision boundary**, demonstrating deeper models can generalise better despite higher variance.
-
-- **Reproducible and Modular ML Pipeline**  
-  Including feature preparation, model definition, training loops, early stopping, and experiment tracking.
+The final model achieved **0.81 accuracy** on the Kaggle test set.
 
 ---
 
-## 📂 Dataset Summary
+## 🚀 Project Motivation
 
-Each data sample contains:
+Financial strategies exhibit **behavioural patterns** rather than simple numeric relationships.  
+Instead of predicting future prices, this task focuses on:
 
-- **Option A** — market features + position  
-- **Option B** — market features + position  
-- **Label** — which option is superior (`0 = A`, `1 = B`)
+- **How two strategies behave under the same market conditions**
+- **How their relative positioning and reactions differ**
+- **Whether those behavioural differences lead to better performance**
 
-Because both options share the **same market conditions**, the problem is naturally framed as:
-
-> **“Which position is better under identical market states?”**
-
-This makes it an ideal case for **pairwise preference learning** using a **Siamese encoder**.
+This approach aligns with behaviour-driven investment modelling, where the target is not price prediction but **decision behaviour representation**.
 
 ---
 
-## 🧠 Approach Overview
+## 🧠 Model Architecture
 
-### 1. Comparative Feature Engineering
-Although raw OHLCV values are available, meaningful patterns arise from position–market interactions.  
-Feature steps included:
+### 1. **Sequence Encoder**  
+Each input sequence (OHLCV + engineered features) is processed by an **8-layer Transformer Encoder**:
 
-- Log returns and normalised values  
-- Rolling statistics (mean, volatility, gradients)  
-- Temporal differences  
-- Combined market + position input vectors  
-- Optional differential features `(A - B)` to strengthen comparative signals  
+- `MODEL_DIM = 256`  
+- `N_LAYERS = 8`  
+- `N_HEADS = 4`  
+- `DROPOUT = 0.1`  
+- LayerNorm, residual connections  
+- Mean pooling for sequence embedding  
 
-These features enable the encoder to learn **how a position behaves relative to the market**, not just the raw numbers.
-
----
-
-### 2. Siamese Transformer Architecture
-
-Two branches share the **same Transformer encoder**, ensuring consistent representation:
+The encoder produces a **behavioural embedding** for each strategy:
 
 ```
-A_input ──► Shared Transformer ──► rep_A
-B_input ──► Shared Transformer ──► rep_B
-```
-
-A comparison head computes:
-
-```
-z = |rep_A - rep_B|
+z_A = Encoder(seq_A)
+z_B = Encoder(seq_B)
 ```
 
 
-Absolute difference emphasises the **magnitude of preference** while ignoring irrelevant directional noise.
+### 2. **Siamese Design**  
+Both encoders share weights (true Siamese):
 
-Finally, a fully connected layer outputs the probability that **B is superior**.
+- Ensures both strategies are mapped into the *same behavioural space*
+- Reduces parameter count  
+- Encourages meaningful comparison  
 
----
+### 3. **Comparison Head**
 
-### 3. Hyperparameter Experiments
+The comparison vector is:
 
-Investigated:
 
-- Transformer depth (1–4 layers)  
-- Embedding size (32–256)  
-- Dropout levels  
-- Optimisers (AdamW, Ranger)  
-- Learning rate schedules  
-- Pooling strategies (mean vs attention)
+```
+[z_A , z_B , |z_A - z_B|]
+```
 
-**Best overall configuration:**
 
-- 2-layer Transformer  
-- 128-d embeddings  
-- AdamW (LR: `3e-4`)  
-- Dropout 0.2  
-- Absolute difference comparison  
+This captures:
 
-Interestingly, deeper models (e.g., 8-layer variants) showed:
+- Absolute behaviour of each strategy  
+- Relative behaviour  
+- Behavioural disagreement  
 
-- **Higher loss** (variance ↑)  
-- **Higher accuracy** (bias ↓ → better boundary)
+Then a 3-layer MLP predicts which strategy performs better:
 
-Consistent with the **bias–variance trade-off** in deep Transformers.
+```
+Linear(768 → 256) → ReLU → Dropout
+Linear(256 → 128) → ReLU
+Linear(128 → 1) → Sigmoid
+```
 
----
-
-## 📊 Results
-
-| Model | Validation Loss | Public Accuracy | Notes |
-|-------|------------------|------------------|--------|
-| Model 6 | Lowest | 0.77 | High confidence but weaker boundary |
-| **Model 8** | Slightly higher | **0.81** | **Best generalisation** |
-
-The deeper model captured more expressive market–position interactions, producing a stronger decision boundary even with a slightly higher loss.
 
 ---
 
-## ⚙️ Tech Stack
+## 🧩 Feature Engineering
 
-- **Python 3**  
-- **PyTorch** (Transformer encoder, Siamese comparison)  
-- **NumPy / Pandas**  
-- **Scikit-learn**  
-- **Matplotlib / Seaborn**  
-- Experiment logging & Git version control  
+A systematic feature engineering process was performed to understand which types of signals help the Transformer learn stable behavioural patterns for the pairwise comparison task.
+
+Although the final model uses a minimal subset of features, I tested several categories of financial indicators during experimentation.
+
+### ✔ Profitability & Duration Features
+These features capture how the strategy behaves relative to market movement and holding time.
+
+- **Log Return**  
+  Standardised return measure, scale-independent.
+
+- **Proxy Return**  
+  A smoothed transformation approximating micro-momentum and directional tendency.
+
+- **Time in Position**  
+  Measures how long a strategy maintains exposure, reflecting behavioural persistence.
+
+### ✔ Momentum & Trend Indicators  
+*(Tested but later removed due to added noise with attention layers)*  
+:contentReference[oaicite:0]{index=0}
+
+- **MACD (Moving Average Convergence Divergence)**  
+- **MACD Signal Line**  
+- **RSI (Relative Strength Index)**  
+
+These improved directional sensitivity but introduced instability when combined with limited sequence lengths.  
+Transformers over-reacted to short-term swings when these indicators were included.
+
+### ✔ Volatility Indicators  
+*(ATR & Historical Volatility were also tested)*  
+:contentReference[oaicite:1]{index=1}
+
+- **ATR (Average True Range)**  
+- **Historical Volatility**  
+
+Useful for regime awareness, but in this pairwise setting they amplified noise and reduced validation accuracy.
+
+### ✔ Final Selected Features
+After evaluating multiple combinations, the final model uses a **lean, stable subset** that produced the strongest behavioural embeddings:
+
+- **Open, High, Low, Close**
+- **Volume**
+- **Position**
+- **Log Return**
+- **Proxy Return**
+
+This combination offered the best trade-off between signal richness and stability, avoiding overfitting and keeping attention patterns focused on core behaviour rather than noisy microstructure effects.
+
+### ✔ Normalisation
+All numerical features were **z-score normalised per sequence**, ensuring that attention compares relationships rather than absolute magnitudes.
+
+
 
 ---
 
-## 🚀 Why This Project Matters
+## 🔧 Training
 
-This project showcases:
+- **Loss:** Binary Cross-Entropy (log-loss)  
+- **Optimizer:** Adam (`lr = 1e-4`)  
+- **Early Stopping:** patience 10  
+- **Batch size:** 32  
+- **Epochs:** up to 50  
 
-### ✔ Real-World ML Problem Framing  
-Reformulating a financial prediction problem into **pairwise preference learning** rather than simple classification.
-
-### ✔ Custom Deep Architecture Design  
-Building a **Siamese Transformer** tailored for comparative decisions.
-
-### ✔ Deep Understanding of Representation Learning  
-Learning robust market–position embeddings under identical contexts.
-
-### ✔ Strong Experimentation Discipline  
-Hyperparameter sweeps, multiple model checkpoints, and nuanced interpretation (boundary vs confidence).
-
-### ✔ Focus on Generalisation  
-Selecting models based on **boundary stability**, not minimum validation loss.
+The chosen learning rate is conservative and stable for attention-based models.
 
 ---
 
-## 📈 Final Remarks
+## 🎯 Results
 
-This project reflects the ability to:
+| Metric | Result |
+|--------|--------|
+| **Kaggle Test Accuracy** | **0.81** |
+| Validation Loss | Smooth convergence |
+| Embedding Separation | Clear behavioural clustering |
 
-- Identify the intrinsic structure of a problem  
-- Build architectures that respect that structure  
-- Engineer meaningful features for sequence models  
-- Diagnose loss–accuracy divergence  
-- Prioritise robust generalisation over superficial metrics  
+The model successfully captured:
 
-It highlights a practical, research-minded approach to deep learning for financial sequence analysis.
+- Regime-dependent behaviour  
+- Different positioning reactions between strategies  
+- Long-range dependency patterns across market contexts  
 
 ---
 
-If you'd like to see the full training notebook or architecture diagrams, they are included in the repository.
+## 🔍 Key Insights
+
+### ✔ 1. Behavioural patterns matter  
+Transformers could detect relationships between:
+
+- Volatility  
+- Returns  
+- Position changes  
+- Cross-time interactions  
+
+This goes beyond simple technical indicators.
+
+### ✔ 2. Siamese works because inputs share the same data structure  
+Both strategies are **two versions of the same behavioural language**.  
+Weight sharing forces a comparable embedding space.
+
+### ✔ 3. Attention > recurrence  
+Unlike LSTM/RNN:
+
+- No noise accumulation  
+- Non-local interactions are directly modelled  
+- Multi-scale behaviour captured effectively  
+
+### ✔ 4. Feature engineering improved embedding quality  
+Adding log returns & proxy returns significantly stabilised learning.
+
+---
+
+## 📁 Repository Structure
+
+```
+.
+├── train/                  # Excel files for training pairs
+│   ├── sample_0_a.xlsx
+│   ├── sample_0_b.xlsx
+│   ├── sample_1_a.xlsx
+│   ├── sample_1_b.xlsx
+│   └── ...
+├── test/                   # Excel files for test pairs
+│   ├── sample_0_a.xlsx
+│   ├── sample_0_b.xlsx
+│   └── ...
+├── train.csv               # id, file names, and pairwise labels (0/1)
+├── test.csv                # id and file names only (no labels)
+├── Siamese_transformer.ipynb
+└── README.md
+```
+
+---
+
+## 🛠 Future Improvements
+
+- Regime-aware encoder (volatility-conditioning)
+- Contrastive learning pretraining  
+- Behavioural clustering of strategies  
+- Attention visualisation for interpretability  
+- Multi-modal features (macro, sentiment, volume profile)  
+
+---
+
+## 📝 Notes
+
+This project demonstrates that:
+
+> **Representation learning is a powerful tool for comparing strategy behaviour,  
+not just for prediction.**
+
+It aligns with the idea that successful investing involves  
+**understanding behavioural fingerprints**,  
+not just forecasting numbers.
