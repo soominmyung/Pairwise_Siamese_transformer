@@ -209,6 +209,42 @@ Adding log returns & proxy returns significantly stabilised learning.
 
 ---
 
+## 🛠️ Key Stack
+
+**Deep Learning**
+- PyTorch  
+- Siamese Networks  
+- Transformer Encoder (8 layers, Multi-Head Attention)  
+- MLP Classifier  
+- Dropout / LayerNorm / Residual Connections  
+
+**Financial Time-Series Engineering**
+- OHLCV processing  
+- Log Returns  
+- Proxy Returns  
+- Time-in-Position  
+- MACD / RSI / ATR / Historical Volatility (experimentation)
+
+**Data Handling & Preprocessing**
+- Pandas  
+- NumPy  
+- Z-score normalisation  
+- Sliding windows / sequence batching  
+- Excel ingestion + dynamic feature parsing  
+
+**Training & Evaluation**
+- Adam Optimiser (lr=1e-4)  
+- Early Stopping  
+- Binary Cross-Entropy  
+- Validation loss tracking  
+- Kaggle evaluation pipeline (0.81 accuracy)
+
+**Environment**
+- Python 3  
+- Jupyter Notebook  
+
+---
+
 ## 🛠 Future Improvements
 
 - Regime-aware encoder (volatility-conditioning)
