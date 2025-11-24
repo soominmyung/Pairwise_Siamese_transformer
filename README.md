@@ -6,7 +6,7 @@ The goal is to learn which strategy performs better *given the same context and 
 
 The final model achieved **0.81 accuracy** on the Kaggle test set.
 
-<img width="2335" height="1127" alt="Siamese" src="https://github.com/user-attachments/assets/199a619d-0325-42e2-a259-282fc86ccd94" />
+<img width="2335" height="1084" alt="Siamese" src="https://github.com/user-attachments/assets/26644f8e-bf9f-453a-b4e0-ce70ed68e702" />
 
 ---
 
