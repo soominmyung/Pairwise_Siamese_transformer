@@ -1,7 +1,7 @@
 # Pairwise Preference Learning with Siamese Transformers  
 Behavioural Modelling for Financial Strategy Comparison
 
-This project implements a **Siamese Transformer architecture** to model behavioural differences between two financial time-series strategies under identical market conditions.  
+This project implements a **Siamese Transformer architecture** to model **behavioural differences between two financial time-series strategies under identical market conditions.**  
 The goal is to learn which strategy performs better *given the same context and the same market environment*, using representation learning rather than classical performance metrics.
 
 The final model achieved **0.81 accuracy** on the Kaggle test set.
