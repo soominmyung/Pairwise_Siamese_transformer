@@ -4,8 +4,6 @@ Behavioural Modelling for Financial Strategy Comparison
 This project implements a **Siamese Transformer architecture** to model **behavioural differences between two financial time-series strategies under identical market conditions.**  
 The goal is to learn which strategy performs better *given the same context and the same market environment*, using representation learning rather than classical performance metrics.
 
-The final model achieved **0.81 accuracy** on the Kaggle test set.
-
 <img width="2335" height="1084" alt="Siamese" src="https://github.com/user-attachments/assets/26644f8e-bf9f-453a-b4e0-ce70ed68e702" />
 
 ---
@@ -149,7 +147,7 @@ The chosen learning rate is conservative and stable for attention-based models.
 
 | Metric | Result |
 |--------|--------|
-| **Kaggle Test Accuracy** | **0.81** |
+| **Test Accuracy** | **0.81** |
 | Validation Loss | Smooth convergence |
 | Embedding Separation | Clear behavioural clustering |
 
