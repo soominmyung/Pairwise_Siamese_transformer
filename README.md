@@ -10,7 +10,7 @@ The final model achieved **0.81 accuracy** on the Kaggle test set.
 
 ---
 
-## 🚀 Project Motivation
+## Project Motivation
 
 Financial strategies exhibit **behavioural patterns** rather than simple numeric relationships.  
 Instead of predicting future prices, this task focuses on:
@@ -23,7 +23,7 @@ This approach aligns with behaviour-driven investment modelling, where the targe
 
 ---
 
-## 🧠 Model Architecture
+## Model Architecture
 
 ### 1. **Sequence Encoder**  
 Each input sequence (OHLCV + engineered features) is processed by an **8-layer Transformer Encoder**:
@@ -77,13 +77,13 @@ Linear(128 → 1) → Sigmoid
 
 ---
 
-## 🧩 Feature Engineering
+## Feature Engineering
 
 A systematic feature engineering process was performed to understand which types of signals help the Transformer learn stable behavioural patterns for the pairwise comparison task.
 
 Although the final model uses a minimal subset of features, I tested several categories of financial indicators during experimentation.
 
-### ✔ Profitability & Duration Features
+### Profitability & Duration Features
 These features capture how the strategy behaves relative to market movement and holding time.
 
 - **Log Return**  
@@ -95,7 +95,7 @@ These features capture how the strategy behaves relative to market movement and 
 - **Time in Position**  
   Measures how long a strategy maintains exposure, reflecting behavioural persistence.
 
-### ✔ Momentum & Trend Indicators  
+### Momentum & Trend Indicators  
 *(Tested but later removed due to added noise with attention layers)*  
 :contentReference[oaicite:0]{index=0}
 
@@ -106,7 +106,7 @@ These features capture how the strategy behaves relative to market movement and 
 These improved directional sensitivity but introduced instability when combined with limited sequence lengths.  
 Transformers over-reacted to short-term swings when these indicators were included.
 
-### ✔ Volatility Indicators  
+### Volatility Indicators  
 *(ATR & Historical Volatility were also tested)*  
 :contentReference[oaicite:1]{index=1}
 
@@ -115,7 +115,7 @@ Transformers over-reacted to short-term swings when these indicators were includ
 
 Useful for regime awareness, but in this pairwise setting they amplified noise and reduced validation accuracy.
 
-### ✔ Final Selected Features
+### Final Selected Features
 After evaluating multiple combinations, the final model uses a **lean, stable subset** that produced the strongest behavioural embeddings:
 
 - **Open, High, Low, Close**
@@ -126,14 +126,14 @@ After evaluating multiple combinations, the final model uses a **lean, stable su
 
 This combination offered the best trade-off between signal richness and stability, avoiding overfitting and keeping attention patterns focused on core behaviour rather than noisy microstructure effects.
 
-### ✔ Normalisation
+### Normalisation
 All numerical features were **z-score normalised per sequence**, ensuring that attention compares relationships rather than absolute magnitudes.
 
 
 
 ---
 
-## 🔧 Training
+## Training
 
 - **Loss:** Binary Cross-Entropy (log-loss)  
 - **Optimizer:** Adam (`lr = 1e-4`)  
@@ -145,7 +145,7 @@ The chosen learning rate is conservative and stable for attention-based models.
 
 ---
 
-## 🎯 Results
+## Results
 
 | Metric | Result |
 |--------|--------|
@@ -161,9 +161,9 @@ The model successfully captured:
 
 ---
 
-## 🔍 Key Insights
+## Key Insights
 
-### ✔ 1. Behavioural patterns matter  
+### 1. Behavioural patterns matter  
 Transformers could detect relationships between:
 
 - Volatility  
@@ -173,23 +173,23 @@ Transformers could detect relationships between:
 
 This goes beyond simple technical indicators.
 
-### ✔ 2. Siamese works because inputs share the same data structure  
+### 2. Siamese works because inputs share the same data structure  
 Both strategies are **two versions of the same behavioural language**.  
 Weight sharing forces a comparable embedding space.
 
-### ✔ 3. Attention > recurrence  
+### 3. Attention > recurrence  
 Unlike LSTM/RNN:
 
 - No noise accumulation  
 - Non-local interactions are directly modelled  
 - Multi-scale behaviour captured effectively  
 
-### ✔ 4. Feature engineering improved embedding quality  
+### 4. Feature engineering improved embedding quality  
 Adding log returns & proxy returns significantly stabilised learning.
 
 ---
 
-## 📁 Repository Structure
+## Repository Structure
 
 ```
 .
@@ -211,7 +211,7 @@ Adding log returns & proxy returns significantly stabilised learning.
 
 ---
 
-## 🛠️ Key Stack
+## Key Stack
 
 **Deep Learning**
 - PyTorch  
@@ -247,7 +247,7 @@ Adding log returns & proxy returns significantly stabilised learning.
 
 ---
 
-## 🛠 Future Improvements
+## Future Improvements
 
 - Regime-aware encoder (volatility-conditioning)
 - Contrastive learning pretraining  
@@ -257,7 +257,7 @@ Adding log returns & proxy returns significantly stabilised learning.
 
 ---
 
-## 📝 Notes
+## Notes
 
 This project demonstrates that:
 
